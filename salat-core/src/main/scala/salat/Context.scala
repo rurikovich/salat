@@ -40,29 +40,29 @@ import org.json4s.JsonAST.JObject
 
 trait Context extends ContextLifecycle with Logging {
 
-  /**Name of the context */
+  /** Name of the context */
   val name: String
 
-  /**Concurrent hashmap of classname to Grater */
+  /** Concurrent hashmap of classname to Grater */
   private[salat] val graters: scala.collection.concurrent.Map[String, Grater[_ <: AnyRef]] = scala.collection.convert.Wrappers.JConcurrentMapWrapper(new ConcurrentHashMap[String, Grater[_ <: AnyRef]]())
 
-  /**Mutable seq of classloaders */
+  /** Mutable seq of classloaders */
   private[salat] var classLoaders: Vector[ClassLoader] = Vector(this.getClass.getClassLoader)
 
-  /**Global key remapping - for instance, always serialize "id" to "_id" */
+  /** Global key remapping - for instance, always serialize "id" to "_id" */
   private[salat] val globalKeyOverrides: scala.collection.concurrent.Map[String, String] = scala.collection.convert.Wrappers.JConcurrentMapWrapper(new ConcurrentHashMap[String, String]())
 
-  /**Per class key overrides - map key is (clazz.getName, field name) */
+  /** Per class key overrides - map key is (clazz.getName, field name) */
   private[salat] val perClassKeyOverrides: scala.collection.concurrent.Map[(String, String), String] = scala.collection.convert.Wrappers.JConcurrentMapWrapper(new ConcurrentHashMap[(String, String), String]())
 
   private[salat] val customTransformers: scala.collection.concurrent.Map[String, CustomTransformer[_ <: AnyRef, _ <: AnyRef]] = scala.collection.convert.Wrappers.JConcurrentMapWrapper(new ConcurrentHashMap[String, CustomTransformer[_ <: AnyRef, _ <: AnyRef]]())
 
   val typeHintStrategy: TypeHintStrategy = StringTypeHintStrategy(when = TypeHintFrequency.WhenNecessary, typeHint = TypeHint)
 
-  /**Enum handling strategy is defined at the context-level, but can be overridden at the individual enum level */
+  /** Enum handling strategy is defined at the context-level, but can be overridden at the individual enum level */
   val defaultEnumStrategy = EnumStrategy.BY_VALUE
 
-  /**Don't serialize any field whose value matches the supplied default args */
+  /** Don't serialize any field whose value matches the supplied default args */
   val suppressDefaultArgs: Boolean = false
 
   private[salat] val neverSuppressTheseFields = scala.collection.mutable.Set[String]("_id")
@@ -86,7 +86,7 @@ trait Context extends ContextLifecycle with Logging {
   private[salat] val resolveCaseObjectOverrides = scala.collection.convert.Wrappers.JConcurrentMapWrapper(new ConcurrentHashMap[(String, String), String]())
   private[salat] val caseObjectHierarchy = scala.collection.mutable.Set[String]()
 
-  def registerCaseObjectOverride[A: Manifest, B <: A: Manifest](serializedValue: String) {
+  def registerCaseObjectOverride[A: Manifest, B <: A : Manifest](serializedValue: String) {
 
     val parentClazz = manifest[A].runtimeClass
     val caseObjectClazz = manifest[B].runtimeClass
@@ -104,7 +104,7 @@ trait Context extends ContextLifecycle with Logging {
     log.info("registerClassLoader: ctx='%s' registering classloader='%s' (total: %d)", name, cl.toString, classLoaders.size)
   }
 
-  def registerCustomTransformer[A <: AnyRef: Manifest, B <: AnyRef: Manifest](custom: CustomTransformer[A, B]) {
+  def registerCustomTransformer[A <: AnyRef : Manifest, B <: AnyRef : Manifest](custom: CustomTransformer[A, B]) {
     if (customTransformers.contains(custom.path)) {
       sys.error("Context '%s' already contains a custom transformer for class='%s'!".format(name, custom.path))
     }
@@ -164,10 +164,59 @@ trait Context extends ContextLifecycle with Logging {
   // encoders.
   protected[salat] def suitable_?(clazz: String) = clazz match {
     case c if clazz.startsWith("scala.") => false
-    case c if clazz.startsWith("java.")  => false
+    case c if clazz.startsWith("java.") => false
     case c if clazz.startsWith("javax.") => false
+
+    case c if clazz.startsWith("models.PlatformTypes.ModuleId") => false
+    case c if clazz.startsWith("models.PlatformTypes.SourceId") => false
+    case c if clazz.startsWith("models.PlatformTypes.FieldToolId") => false
+    case c if clazz.startsWith("models.PlatformTypes.UnitId") => false
+    case c if clazz.startsWith("models.PlatformTypes.DeviceId") => false
+    case c if clazz.startsWith("models.PlatformTypes.ClientId") => false
+    case c if clazz.startsWith("models.PlatformTypes.CropId") => false
+    case c if clazz.startsWith("models.PlatformTypes.OperationId") => false
+    case c if clazz.startsWith("models.PlatformTypes.OperatorId") => false
+    case c if clazz.startsWith("models.PlatformTypes.GeoZoneId") => false
+    case c if clazz.startsWith("models.PlatformTypes.ShardId") => false
+    case c if clazz.startsWith("models.PlatformTypes.FieldOpId") => false
+    case c if clazz.startsWith("models.PlatformTypes.MessageType") => false
+    case c if clazz.startsWith("models.PlatformTypes.MessageTime") => false
+
+    case c if clazz.startsWith("infobis.asPlatform.ModuleId") => false
+    case c if clazz.startsWith("infobis.asPlatform.SourceId") => false
+    case c if clazz.startsWith("infobis.asPlatform.FieldToolId") => false
+    case c if clazz.startsWith("infobis.asPlatform.UnitId") => false
+    case c if clazz.startsWith("infobis.asPlatform.DeviceId") => false
+    case c if clazz.startsWith("infobis.asPlatform.ClientId") => false
+    case c if clazz.startsWith("infobis.asPlatform.CropId") => false
+    case c if clazz.startsWith("infobis.asPlatform.OperationId") => false
+    case c if clazz.startsWith("infobis.asPlatform.OperatorId") => false
+    case c if clazz.startsWith("infobis.asPlatform.GeoZoneId") => false
+    case c if clazz.startsWith("infobis.asPlatform.ShardId") => false
+    case c if clazz.startsWith("infobis.asPlatform.FieldOpId") => false
+    case c if clazz.startsWith("infobis.asPlatform.MessageType") => false
+    case c if clazz.startsWith("infobis.asPlatform.MessageTime") => false
+    case c if clazz.startsWith("models.PlatformTypes.") => false
+
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.ModuleId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.SourceId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.FieldToolId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.UnitId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.DeviceId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.ClientId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.CropId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.OperationId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.OperatorId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.GeoZoneId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.ShardId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.FieldOpId") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.MessageType") => false
+    case c if clazz.startsWith("infobis.asPlatform.platform.package.MessageTime") => false
+    case c if clazz.startsWith("models.PlatformTypes.") => false
+
+
     //    case c if getClassNamed(c).map(_.getEnclosingClass != null).getOrElse(false) => false
-    case _                               => true
+    case _ => true
   }
 
   protected[salat] def needsProxyGrater(clazz: Class[_]) = {
@@ -176,7 +225,8 @@ trait Context extends ContextLifecycle with Logging {
     val isAbstractClazz = Modifier.isAbstract(clazz.getModifiers)
     val outcome = usedSalatAnnotation || isTrait || isAbstractClazz
     if (outcome) {
-      log.trace("""
+      log.trace(
+        """
 
 needsProxyGrater: clazz='%s'
   usedSalatAnnotation: %s
@@ -220,7 +270,7 @@ needsProxyGrater: clazz='%s'
     if (g.isDefined) g.get else throw GraterGlitch(c)(this)
   }
 
-  def lookup[A <: CaseClass: Manifest]: Grater[A] = lookup(manifest[A].runtimeClass.getName).asInstanceOf[Grater[A]]
+  def lookup[A <: CaseClass : Manifest]: Grater[A] = lookup(manifest[A].runtimeClass.getName).asInstanceOf[Grater[A]]
 
   def lookup(c: String, clazz: CaseClass): Grater[_ <: AnyRef] = {
     val g = lookup_?(c)
@@ -246,7 +296,7 @@ needsProxyGrater: clazz='%s'
 
   @deprecated("Use lookup instead - will be removed for 0.0.9 release", "0.0.8") def lookup_!(clazz: String, x: CaseClass): Grater[_ <: AnyRef] = lookup(clazz, x)
 
-  @deprecated("Use lookup instead - will be removed for 0.0.9 release", "0.0.8") def lookup_![X <: CaseClass: Manifest]: Grater[X] = lookup[X]
+  @deprecated("Use lookup instead - will be removed for 0.0.9 release", "0.0.8") def lookup_![X <: CaseClass : Manifest]: Grater[X] = lookup[X]
 
   @deprecated("Use lookup instead - will be removed for 0.0.9 release", "0.0.8") def lookup_!(clazz: String): Grater[_ <: AnyRef] = lookup(clazz)
 
@@ -259,10 +309,11 @@ needsProxyGrater: clazz='%s'
     m.get(typeHintStrategy.typeHint).map(typeHintStrategy.decode(_)).filter {
       str =>
         resolveClass(str, classLoaders) match {
-          case Some(clazz) if isCaseClass(clazz)  => true
+          case Some(clazz) if isCaseClass(clazz) => true
           case Some(clazz) if isCaseObject(clazz) => true
           case Some(clazz) => {
-            log.warning("""
+            log.warning(
+              """
 
     extractTypeHint: '%s' -> '%s'
       UNSUITABLE TYPE HINT!  Type hint must be a case class or a case object.
@@ -283,10 +334,11 @@ needsProxyGrater: clazz='%s'
     dbo.get(typeHintStrategy.typeHint).map(typeHintStrategy.decode(_)).filter {
       str =>
         resolveClass(str, classLoaders) match {
-          case Some(clazz) if isCaseClass(clazz)  => true
+          case Some(clazz) if isCaseClass(clazz) => true
           case Some(clazz) if isCaseObject(clazz) => true
           case Some(clazz) => {
-            log.warning("""
+            log.warning(
+              """
 
 extractTypeHint: '%s' -> '%s'
   UNSUITABLE TYPE HINT!  Type hint must be a case class or a case object.
